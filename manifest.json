@@ -1,0 +1,14 @@
+{
+  "name": "炉火 · 习惯打卡",
+  "short_name": "炉火",
+  "description": "每天喂一口火,看它越烧越旺",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#14171F",
+  "theme_color": "#14171F",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

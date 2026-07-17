@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>炉火 · 习惯打卡</title>
+<meta name="theme-color" content="#14171F">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14171F;
+    --card:#1D2130;
+    --card-hi:#252A3D;
+    --line: rgba(241,237,228,0.08);
+    --text:#F1EDE4;
+    --muted:#8A8F9E;
+    --ember:#D8A24E;
+    --ember-hot:#F2B84B;
+    --ember-cold:#5A4A38;
+    --done:#7FA66B;
+    --danger:#C6604D;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0; background:var(--ink); color:var(--text); font-family:'Inter', sans-serif; overscroll-behavior-y:none;}
+  body{
+    min-height:100vh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  ::selection{ background: var(--ember); color: var(--ink); }
+
+  .wrap{ max-width:560px; margin:0 auto; padding:28px 20px 120px; }
+
+  header{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px; }
+  h1{
+    font-family:'Fraunces', serif; font-weight:700; font-size:30px; letter-spacing:-0.01em; margin:0;
+    background: linear-gradient(180deg, var(--text), #cfc7b6);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .date{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--muted); }
+  .sub{ color:var(--muted); font-size:14px; margin: 4px 0 28px; line-height:1.5; }
+
+  .habit{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px 18px 16px;
+    margin-bottom:14px;
+    position:relative;
+    overflow:hidden;
+    transition: border-color .2s ease;
+  }
+  .habit.done-today{ border-color: rgba(216,162,78,0.35); }
+
+  .habit-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .habit-name{ font-family:'Fraunces', serif; font-size:19px; font-weight:600; letter-spacing:-0.01em; }
+
+  .flame-wrap{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .flame{ width:20px; height:20px; display:block; }
+  .streak-num{ font-family:'JetBrains Mono', monospace; font-weight:600; font-size:15px; color:var(--ember); min-width: 16px; text-align:right;}
+
+  .week{ display:flex; gap:7px; margin-top:16px; }
+  .day{
+    flex:1;
+    height:34px;
+    border-radius:9px;
+    background: rgba(255,255,255,0.03);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    color: var(--muted);
+    position:relative;
+    cursor:pointer;
+    user-select:none;
+    transition: background .15s ease, border-color .15s ease, transform .1s ease;
+  }
+  .day.future{ opacity:0.28; pointer-events:none; }
+  .day.today{ border-color: var(--ember); }
+  .day.filled{
+    background: linear-gradient(160deg, var(--ember-hot), var(--ember));
+    color: rgba(20,23,31,0.75);
+    border-color: transparent;
+    font-weight:600;
+  }
+  .day:active{ transform: scale(0.94); }
+
+  .habit-actions{ position:absolute; top:14px; right:14px; }
+  .del-btn{
+    background:none; border:none; color: var(--muted); font-size:18px; line-height:1;
+    padding:4px 6px; cursor:pointer; opacity:0.5;
+  }
+  .del-btn:active{ opacity:1; color:var(--danger); }
+
+  .empty{
+    text-align:center; padding:60px 20px; color:var(--muted);
+  }
+  .empty .flame-big{ width:52px; height:52px; margin:0 auto 18px; display:block; opacity:0.5; }
+  .empty p{ font-size:14px; line-height:1.6; margin:0; }
+
+  .add-row{
+    position:fixed; left:0; right:0; bottom:0;
+    padding: 14px 20px calc(16px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, rgba(20,23,31,0), var(--ink) 30%);
+  }
+  .add-inner{ max-width:560px; margin:0 auto; display:flex; gap:10px; }
+  #habit-input{
+    flex:1;
+    background: var(--card-hi);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family:'Inter', sans-serif;
+    font-size:15px;
+    outline:none;
+  }
+  #habit-input::placeholder{ color: var(--muted); }
+  #habit-input:focus{ border-color: var(--ember); }
+  #add-btn{
+    background: var(--ember);
+    color: var(--ink);
+    border:none;
+    border-radius:14px;
+    padding: 0 22px;
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    cursor:pointer;
+  }
+  #add-btn:active{ background: var(--ember-hot); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>炉火</h1>
+      <span class="date" id="today-label"></span>
+    </header>
+    <p class="sub">每天喂它一口,火就不会熄。点今天的格子完成打卡。</p>
+
+    <div id="list"></div>
+    <div id="empty" class="empty" style="display:none;">
+      <svg class="flame-big" viewBox="0 0 192 192"><path d="M96 34c8 22-6 30-6 46 0 12 10 18 10 18s16-10 16-30c14 14 20 32 20 48 0 30-22 52-50 52s-50-22-50-52c0-24 14-40 26-56 6 18-2 26-2 34 0 8 6 14 14 14 10 0 16-8 16-20 0-16-6-28 6-54z" fill="#D8A24E"/></svg>
+      <p>还没有习惯。<br>加一个开始烧起第一簇火。</p>
+    </div>
+  </div>
+
+  <div class="add-row">
+    <div class="add-inner">
+      <input id="habit-input" type="text" placeholder="比如:喝水、读书、拉伸..." maxlength="20" />
+      <button id="add-btn">加入</button>
+    </div>
+  </div>
+
+<script>
+const STORAGE_KEY = 'lu-huo-habits-v1';
+const DOW = ['日','一','二','三','四','五','六'];
+
+function todayISO(d = new Date()){
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off*60000);
+  return local.toISOString().slice(0,10);
+}
+function addDays(iso, n){
+  const d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return todayISO(d);
+}
+
+function loadHabits(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function saveHabits(habits){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
+}
+
+let habits = loadHabits();
+
+function computeStreak(habit, today){
+  let streak = 0;
+  let cursor = today;
+  // if today not done yet, streak counts backward from yesterday
+  if(!habit.dates.includes(today)){
+    cursor = addDays(today, -1);
+  }
+  while(habit.dates.includes(cursor)){
+    streak++;
+    cursor = addDays(cursor, -1);
+  }
+  return streak;
+}
+
+function flameSVG(intensity){
+  // intensity 0..1 controls color/scale
+  const color = intensity <= 0 ? '#4A4E5C' : (intensity < 0.4 ? '#8A6A3E' : (intensity < 0.8 ? '#D8A24E' : '#F2B84B'));
+  return `<svg class="flame" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+    <path d="M96 34c8 22-6 30-6 46 0 12 10 18 10 18s16-10 16-30c14 14 20 32 20 48 0 30-22 52-50 52s-50-22-50-52c0-24 14-40 26-56 6 18-2 26-2 34 0 8 6 14 14 14 10 0 16-8 16-20 0-16-6-28 6-54z" fill="${color}"/>
+  </svg>`;
+}
+
+function render(){
+  const listEl = document.getElementById('list');
+  const emptyEl = document.getElementById('empty');
+  const today = todayISO();
+  document.getElementById('today-label').textContent =
+    `${today.slice(5).replace('-','.')} 周${DOW[new Date(today+'T00:00:00').getDay()]}`;
+
+  if(habits.length === 0){
+    listEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  listEl.innerHTML = habits.map((h, idx) => {
+    const streak = computeStreak(h, today);
+    const doneToday = h.dates.includes(today);
+    const intensity = Math.min(streak / 21, 1); // caps "full blaze" at 3 weeks
+    const days = [];
+    for(let i = -6; i <= 0; i++){
+      const iso = addDays(today, i);
+      const isToday = iso === today;
+      const filled = h.dates.includes(iso);
+      const label = DOW[new Date(iso+'T00:00:00').getDay()];
+      days.push(`<div class="day ${filled?'filled':''} ${isToday?'today':''}" data-idx="${idx}" data-date="${iso}">${label}</div>`);
+    }
+    return `
+      <div class="habit ${doneToday?'done-today':''}">
+        <button class="del-btn" data-del="${idx}" aria-label="删除">✕</button>
+        <div class="habit-top">
+          <div class="habit-name">${escapeHTML(h.name)}</div>
+          <div class="flame-wrap">
+            ${flameSVG(intensity)}
+            <span class="streak-num">${streak}</span>
+          </div>
+        </div>
+        <div class="week">${days.join('')}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHTML(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+document.getElementById('list').addEventListener('click', (e) => {
+  const dayEl = e.target.closest('.day');
+  const delBtn = e.target.closest('.del-btn');
+  if(dayEl){
+    const idx = +dayEl.dataset.idx;
+    const date = dayEl.dataset.date;
+    const h = habits[idx];
+    const pos = h.dates.indexOf(date);
+    if(pos >= 0){ h.dates.splice(pos,1); } else { h.dates.push(date); }
+    saveHabits(habits);
+    render();
+  } else if(delBtn){
+    const idx = +delBtn.dataset.del;
+    if(confirm(`删除「${habits[idx].name}」?打卡记录也会一起消失。`)){
+      habits.splice(idx,1);
+      saveHabits(habits);
+      render();
+    }
+  }
+});
+
+function addHabit(){
+  const input = document.getElementById('habit-input');
+  const name = input.value.trim();
+  if(!name) return;
+  habits.push({ id: Date.now(), name, dates: [] });
+  saveHabits(habits);
+  input.value = '';
+  render();
+}
+document.getElementById('add-btn').addEventListener('click', addHabit);
+document.getElementById('habit-input').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') addHabit();
+});
+
+render();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
